@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ESCAPE: The Sephora Vault 💄</title>
+  <meta name="description" content="A makeup-store themed escape game in one file." />
+  <style>
+    :root{
+      --bg:#0b0b0f;
+      --panel:#121221;
+      --panel2:#171730;
+      --text:#f4f4ff;
+      --muted:#b9b9d6;
+      --accent:#ff4fb3;
+      --accent2:#7c5cff;
+      --good:#29d17d;
+      --bad:#ff5b5b;
+      --line:rgba(255,255,255,.10);
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --radius:18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(255,79,179,.25), transparent 60%),
+        radial-gradient(900px 500px at 85% 5%, rgba(124,92,255,.22), transparent 55%),
+        radial-gradient(1000px 700px at 50% 110%, rgba(255,255,255,.06), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+    }
+    .app{
+      width:min(980px, 100%);
+      display:grid;
+      gap:14px;
+    }
+    .topbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 16px;
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), transparent);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+    .brand{
+      display:flex; gap:12px; align-items:center;
+    }
+    .logo{
+      width:44px; height:44px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,79,179,.9), rgba(255,79,179,.1) 60%),
+        radial-gradient(circle at 70% 70%, rgba(124,92,255,.9), rgba(124,92,255,.1) 55%),
+        rgba(255,255,255,.03);
+      display:grid; place-items:center;
+      font-size:22px;
+    }
+    .title h1{
+      margin:0; font-size:18px; letter-spacing:.2px;
+    }
+    .title p{
+      margin:2px 0 0; font-size:12px; color:var(--muted);
+    }
+    .stats{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;
+      font-size:12px; color:var(--muted);
+    }
+    .pill{
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      display:flex; gap:8px; align-items:center;
+    }
+    .pill b{color:var(--text); font-weight:700}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.3fr .9fr;
+      gap:14px;
+    }
+    @media (max-width: 860px){
+      .grid{grid-template-columns:1fr}
+      .stats{justify-content:flex-start}
+    }
+    .card{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card header{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+      background:rgba(0,0,0,.16);
+    }
+    .card header h2{
+      margin:0; font-size:14px; letter-spacing:.2px;
+    }
+    .card header .tag{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--muted);
+      background:rgba(255,255,255,.03);
+    }
+    .content{ padding:16px; }
+    .story{
+      line-height:1.35;
+      color:var(--text);
+      font-size:14px;
+    }
+    .story .muted{color:var(--muted)}
+    .stage{
+      display:grid;
+      gap:12px;
+      margin-top:12px;
+    }
+    .scene{
+      width:100%;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      padding:14px;
+      overflow:hidden;
+    }
+    .scene svg{width:100%; height:auto; display:block}
+    .controls{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    input[type="text"], input[type="number"]{
+      flex:1;
+      min-width: 200px;
+      padding:12px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(10,10,20,.45);
+      color:var(--text);
+      outline:none;
+      font-size:14px;
+    }
+    input::placeholder{color:rgba(185,185,214,.7)}
+    button{
+      appearance:none;
+      border:none;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color:white;
+      padding:12px 14px;
+      font-size:14px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:700;
+      box-shadow: 0 12px 30px rgba(255,79,179,.18);
+    }
+    button.secondary{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--text);
+      box-shadow:none;
+      font-weight:650;
+    }
+    button:active{transform: translateY(1px)}
+    .msg{
+      padding:12px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.18);
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .msg.good{border-color: rgba(41,209,125,.35); color: rgba(210,255,231,.92)}
+    .msg.bad{border-color: rgba(255,91,91,.35); color: rgba(255,221,221,.92)}
+    .hint{
+      font-size:12px; color:var(--muted);
+      border-left:3px solid rgba(255,79,179,.5);
+      padding:8px 10px;
+      background:rgba(255,255,255,.03);
+      border-radius:10px;
+    }
+    .panel{
+      background:rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:14px;
+      display:grid;
+      gap:10px;
+    }
+    .list{
+      display:grid; gap:10px;
+    }
+    .room{
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    .room .left{
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .badge{
+      width:34px; height:34px;
+      border-radius:12px;
+      display:grid; place-items:center;
+      font-weight:800;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      color:var(--text);
+      flex:0 0 auto;
+    }
+    .room h3{margin:0; font-size:13px}
+    .room p{margin:2px 0 0; font-size:12px; color:var(--muted); line-height:1.3}
+    .lock{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.20);
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .lock.ok{color: rgba(210,255,231,.92); border-color: rgba(41,209,125,.35)}
+    .footer{
+      text-align:center;
+      color:rgba(185,185,214,.75);
+      font-size:12px;
+      padding:10px;
+    }
+    .kbd{
+      font-family:var(--mono);
+      padding:2px 6px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:8px;
+      background:rgba(0,0,0,.25);
+      color:rgba(244,244,255,.95);
+      font-size:12px;
+    }
+    a{color:rgba(255,79,179,.95)}
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Escape game">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">💄</div>
+        <div class="title">
+          <h1>ESCAPE: The Sephora Vault</h1>
+          <p>One-file web escape game • works on phones & computers</p>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="pill">Progress: <b id="progressText">0/5</b></div>
+        <div class="pill">Hints used: <b id="hintCount">0</b></div>
+        <button class="secondary" id="resetBtn" title="Reset the game">Reset</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="card" aria-label="Game">
+        <header>
+          <h2 id="roomTitle">Welcome</h2>
+          <span class="tag" id="roomTag">Makeup Store Escape</span>
+        </header>
+
+        <div class="content">
+          <div class="story" id="roomStory">
+            The store is closing. The staff is gone. The lights dim… except the glow from the <b>Beauty Vault</b>.
+            <br><br>
+            A voice from the PA system crackles: <span class="muted">“Last shopper leaves when the vault opens.”</span>
+            <br><br>
+            You spot 4 locks leading to the vault keypad. Solve each to get the final code.
+            <br><br>
+            Press <span class="kbd">Start</span>.
+          </div>
+
+          <div class="stage" id="stage">
+            <div class="scene" id="scene">
+              <!-- SVG scene will be injected -->
+            </div>
+
+            <div class="panel">
+              <div class="controls" id="controls">
+                <button id="startBtn">Start</button>
+              </div>
+              <div class="msg" id="message">
+                Tip: You can use the Hint button if you get stuck.
+              </div>
+              <div class="hint" id="hint" hidden></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="card" aria-label="Locks">
+        <header>
+          <h2>Locks & Clues</h2>
+          <span class="tag">Vault Status</span>
+        </header>
+        <div class="content">
+          <div class="list" id="lockList">
+            <!-- lock items injected -->
+          </div>
+
+          <div class="panel" style="margin-top:12px">
+            <div style="font-weight:800; letter-spacing:.2px">Final Vault Code</div>
+            <div style="color:var(--muted); font-size:12px; line-height:1.3">
+              After you solve Rooms 1–4, you’ll be able to enter the final code in Room 5.
+            </div>
+            <div class="hint" style="border-left-color: rgba(124,92,255,.55)">
+              This game saves automatically in your browser (until you hit Reset).
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="footer">
+      Made for you in one file 💖 • Put this on GitHub Pages and it becomes your website.
+    </div>
+  </div>
+
+<script>
+(function(){
+  // ---------- State ----------
+  const STORAGE_KEY = "sephora_vault_escape_v1";
+  const state = loadState() || {
+    roomIndex: 0,
+    solved: [false,false,false,false,false],
+    hintsUsed: 0
+  };
+
+  // ---------- Content ----------
+  // Rooms 1–4 each produce a number. Room 5 asks for final code.
+  // We intentionally keep it fun + "Sephora vibe" without using trademarks in a logo sense.
+  const rooms = [
+    {
+      title: "Welcome",
+      tag: "Makeup Store Escape",
+      story: `The store is closing. The staff is gone. The lights dim… except the glow from the <b>Beauty Vault</b>.
+        <br><br>
+        A voice from the PA system crackles: <span class="muted">“Last shopper leaves when the vault opens.”</span>
+        <br><br>
+        You spot 4 locks leading to the vault keypad. Solve each to get the final code.
+        <br><br>
+        Press <span class="kbd">Start</span>.`,
+      scene: sceneWelcome(),
+      ui: () => ({
+        type: "start"
+      })
+    },
+    {
+      title: "Room 1: Lipstick Shelf",
+      tag: "Lock #1",
+      story: `A lipstick display has a tiny drawer with a sticker:
+        <br><br>
+        <span class="kbd">“Shade code = (number of letters in 'MATTE') × (number of letters in 'GLOSS')”</span>
+        <br><br>
+        Enter the <b>2-digit</b> shade code to open Lock #1.`,
+      scene: sceneLipstick(),
+      hint: "Count letters: MATTE has 5 letters. GLOSS has 5 letters. Multiply them.",
+      answer: (input) => normalize(input) === "25",
+      onSolveValue: 25
+    },
+    {
+      title: "Room 2: Skincare Wall",
+      tag: "Lock #2",
+      story: `A neon sign flickers above serums:
+        <br><br>
+        <span class="kbd">“Cleanse → Tone → Treat → Moisturize → SPF”</span>
+        <br><br>
+        A note says: <span class="muted">“Use the POSITION of SPF in the routine.”</span>
+        <br><br>
+        Enter the <b>1-digit</b> position number to open Lock #2.`,
+      scene: sceneSkincare(),
+      hint: "Count the steps in order. SPF is the last step.",
+      answer: (input) => normalize(input) === "5",
+      onSolveValue: 5
+    },
+    {
+      title: "Room 3: Makeup Bag",
+      tag: "Lock #3",
+      story: `You find a makeup bag with charms: 💄 ✨ 🖤 ⭐
+        <br><br>
+        A tag reads: <span class="muted">“Add the STAR values. Glitter = 3, Heart = 2, Star = 5.”</span>
+        <br><br>
+        Question: What’s the value of <b>✨ + ⭐</b>?
+        <br><br>
+        Enter the <b>1-digit</b> answer to open Lock #3.`,
+      scene: sceneBag(),
+      hint: "Glitter (✨) is 3, Star (⭐) is 5. Add them.",
+      answer: (input) => normalize(input) === "8",
+      onSolveValue: 8
+    },
+    {
+      title: "Room 4: Checkout Counter",
+      tag: "Lock #4",
+      story: `A receipt printer spits out a weird coupon:
+        <br><br>
+        <span class="kbd">“20% OFF if you solve: 12 + (3 × 4)”</span>
+        <br><br>
+        Enter the <b>2-digit</b> total to open Lock #4.`,
+      scene: sceneCheckout(),
+      hint: "Do multiplication first: 3×4=12. Then add 12.",
+      answer: (input) => normalize(input) === "24",
+      onSolveValue: 24
+    },
+    {
+      title: "Room 5: The Beauty Vault",
+      tag: "FINAL",
+      story: `All locks click open. The vault keypad lights up with one last instruction:
+        <br><br>
+        <b>Final Code Rule:</b>
+        <br>
+        Code = (Room1) (Room2) (Room3) (Room4)
+        <br><br>
+        Example: if values were 11,2,3,44 → code would be 112344.
+        <br><br>
+        Enter the full code to escape.`,
+      scene: sceneVault(),
+      hint: "Put the solved numbers together in order: Room1, then Room2, then Room3, then Room4.",
+      answer: (input) => normalize(input) === finalCodeExpected(),
+      onSolveValue: null,
+      isFinal: true
+    }
+  ];
+
+  function finalCodeExpected(){
+    // Room1=25, Room2=5, Room3=8, Room4=24 → "255824"
+    return "255824";
+  }
+
+  // ---------- DOM ----------
+  const el = {
+    roomTitle:
